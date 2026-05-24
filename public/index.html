@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FridgeChef — What's for dinner?</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f0f;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.phone{width:100%;max-width:390px;background:#1a1a1a;border-radius:32px;overflow:hidden;border:1px solid #2a2a2a}
+.hero{background:#111;padding:32px 20px 28px;text-align:center;border-bottom:1px solid #222}
+.hero-icon{width:64px;height:64px;background:#1D9E75;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px}
+.hero h1{font-size:22px;font-weight:600;margin-bottom:6px;color:#fff}
+.hero p{font-size:14px;color:#888}
+.content{padding:20px}
+.label{font-size:11px;color:#666;margin-bottom:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+.tag-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.tag{display:flex;align-items:center;gap:6px;padding:7px 12px;background:#222;border:1px solid #333;border-radius:99px;font-size:13px;color:#aaa;cursor:pointer;transition:all 0.15s;user-select:none}
+.tag.active{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.tag:hover{border-color:#555}
+.input-row{display:flex;gap:8px;margin-bottom:20px}
+.input-row input{flex:1;font-size:14px;padding:0 14px;height:42px;border-radius:12px;border:1px solid #333;background:#222;color:#fff;outline:none;transition:border-color 0.15s}
+.input-row input:focus{border-color:#1D9E75}
+.input-row input::placeholder{color:#555}
+.add-btn{height:42px;width:42px;border-radius:12px;background:#1D9E75;border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity 0.15s}
+.add-btn:hover{opacity:0.85}
+.diet-row{display:flex;gap:6px;margin-bottom:22px;flex-wrap:wrap}
+.diet-btn{padding:7px 14px;border-radius:99px;font-size:13px;border:1px solid #333;background:transparent;color:#888;cursor:pointer;transition:all 0.15s}
+.diet-btn.on{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.diet-btn:hover{border-color:#555;color:#ccc}
+.go-btn{width:100%;padding:15px;border-radius:14px;background:#fff;color:#111;font-size:15px;font-weight:600;border:none;cursor:pointer;transition:opacity 0.15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.go-btn:hover{opacity:0.9}
+.go-btn:disabled{opacity:0.5;cursor:not-allowed}
+.error-box{background:#2a1010;border:1px solid #5a2020;border-radius:10px;padding:12px 14px;font-size:13px;color:#f08080;margin-top:12px}
+.loading{text-align:center;padding:48px 20px}
+.spinner{width:40px;height:40px;border:2px solid #333;border-top-color:#1D9E75;border-radius:50%;margin:0 auto 16px;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{color:#888;font-size:14px}
+.results-header{padding:20px 20px 0}
+.back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:#888;cursor:pointer;margin-bottom:16px;background:none;border:none;padding:0}
+.back-btn:hover{color:#ccc}
+.results-title{font-size:17px;font-weight:600;color:#fff;margin-bottom:4px}
+.results-sub{font-size:13px;color:#666;margin-bottom:16px}
+.recipe-card{margin:0 20px 12px;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;cursor:pointer;transition:border-color 0.15s}
+.recipe-card:hover{border-color:#444}
+.recipe-head{padding:14px 16px;display:flex;align-items:center;gap:12px}
+.recipe-num{width:30px;height:30px;border-radius:50%;background:#1D9E75;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.recipe-name{font-size:15px;font-weight:500;color:#fff}
+.recipe-meta{font-size:12px;color:#666;margin-top:2px}
+.recipe-body{padding:0 16px 16px;border-top:1px solid #222;padding-top:12px}
+.recipe-desc{font-size:13px;color:#888;line-height:1.6;margin-bottom:10px}
+.step{font-size:13px;color:#ccc;margin-bottom:6px;padding-left:16px;position:relative;line-height:1.55}
+.step::before{content:"•";position:absolute;left:4px;color:#1D9E75}
+.pb{padding-bottom:20px}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <div id="view-home">
+    <div class="hero">
+      <div class="hero-icon">🍳</div>
+      <h1>What's in your fridge?</h1>
+      <p>Add ingredients, get 3 recipes instantly</p>
+    </div>
+    <div class="content">
+      <div class="label">Your ingredients</div>
+      <div class="tag-row" id="tag-row">
+        <div class="tag active" data-v="chicken">🍗 Chicken</div>
+        <div class="tag active" data-v="rice">🌾 Rice</div>
+        <div class="tag active" data-v="eggs">🥚 Eggs</div>
+        <div class="tag" data-v="tomato">🍅 Tomato</div>
+        <div class="tag" data-v="onion">🧅 Onion</div>
+        <div class="tag" data-v="garlic">🧄 Garlic</div>
+        <div class="tag" data-v="pasta">🍝 Pasta</div>
+        <div class="tag" data-v="cheese">🧀 Cheese</div>
+      </div>
+      <div class="input-row">
+        <input type="text" id="ingredient-input" placeholder="Add your ingredient..."/>
+        <button class="add-btn" id="add-btn" aria-label="Add">+</button>
+      </div>
+      <div class="label">Dietary preference</div>
+      <div class="diet-row" id="diet-row">
+        <button class="diet-btn on" data-v="none">Any</button>
+        <button class="diet-btn" data-v="low-calorie">Low calorie</button>
+        <button class="diet-btn" data-v="vegetarian">Vegetarian</button>
+        <button class="diet-btn" data-v="high-protein">High protein</button>
+      </div>
+      <button class="go-btn" id="go-btn">🍽️ &nbsp;Find recipes</button>
+      <div id="error-area"></div>
+    </div>
+  </div>
+
+  <div id="view-loading" style="display:none">
+    <div class="hero" style="padding:20px">
+      <div class="hero-icon">👨‍🍳</div>
+      <h1 style="font-size:18px">Finding recipes...</h1>
+    </div>
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>AI chef is thinking...</p>
+    </div>
+  </div>
+
+  <div id="view-results" style="display:none">
+    <div class="hero" style="padding:20px 20px 16px">
+      <div class="hero-icon">✅</div>
+      <h1 style="font-size:18px">3 recipes for tonight</h1>
+      <p id="result-sub"></p>
+    </div>
+    <div style="padding:16px 20px 0">
+      <button class="back-btn" id="back-btn">← Try different ingredients</button>
+    </div>
+    <div id="recipes-container" class="pb"></div>
+  </div>
+
+</div>
+
+<script>
+const tagRow = document.getElementById('tag-row');
+const input = document.getElementById('ingredient-input');
+const addBtn = document.getElementById('add-btn');
+const goBtn = document.getElementById('go-btn');
+const backBtn = document.getElementById('back-btn');
+const errorArea = document.getElementById('error-area');
+const dietRow = document.getElementById('diet-row');
+
+let diet = 'none';
+dietRow.querySelectorAll('.diet-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    diet = b.dataset.v;
+    dietRow.querySelectorAll('.diet-btn').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+  });
+});
+
+tagRow.addEventListener('click', e => {
+  const tag = e.target.closest('.tag');
+  if (tag) tag.classList.toggle('active');
+});
+
+function addTag(val) {
+  const v = val.trim();
+  if (!v) return;
+  const existing = [...tagRow.querySelectorAll('.tag')].find(t => t.dataset.v.toLowerCase() === v.toLowerCase());
+  if (existing) { existing.classList.add('active'); return; }
+  const tag = document.createElement('div');
+  tag.className = 'tag active';
+  tag.dataset.v = v;
+  tag.textContent = v.charAt(0).toUpperCase() + v.slice(1);
+  tag.addEventListener('click', () => tag.classList.toggle('active'));
+  tagRow.appendChild(tag);
+}
+
+addBtn.addEventListener('click', () => { addTag(input.value); input.value = ''; });
+input.addEventListener('keydown', e => { if (e.key === 'Enter') { addTag(input.value); input.value = ''; } });
+
+function show(id) {
+  ['view-home','view-loading','view-results'].forEach(v => {
+    document.getElementById(v).style.display = v === id ? 'block' : 'none';
+  });
+}
+
+backBtn.addEventListener('click', () => show('view-home'));
+
+goBtn.addEventListener('click', async () => {
+  errorArea.innerHTML = '';
+  const items = [...tagRow.querySelectorAll('.tag.active')].map(t => t.dataset.v);
+  if (items.length === 0) {
+    errorArea.innerHTML = '<div class="error-box">Please select at least one ingredient.</div>';
+    return;
+  }
+  show('view-loading');
+  document.getElementById('result-sub').textContent = items.join(', ');
+
+  try {
+    const res = await fetch('/api/recipes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ingredients: items, diet })
+    });
+    const data = await res.json();
+    if (!data.recipes) throw new Error('No recipes');
+    renderRecipes(data.recipes);
+    show('view-results');
+  } catch (err) {
+    show('view-home');
+    errorArea.innerHTML = '<div class="error-box">Something went wrong. Please try again.</div>';
+  }
+});
+
+function renderRecipes(recipes) {
+  const container = document.getElementById('recipes-container');
+  container.innerHTML = '';
+  recipes.forEach((r, i) => {
+    const card = document.createElement('div');
+    card.className = 'recipe-card';
+    card.innerHTML = `
+      <div class="recipe-head">
+        <div class="recipe-num">${i + 1}</div>
+        <div>
+          <div class="recipe-name">${r.name}</div>
+          <div class="recipe-meta">⏱ ${r.time} &nbsp;·&nbsp; ${r.difficulty}</div>
+        </div>
+      </div>
+      <div class="recipe-body">
+        <div class="recipe-desc">${r.description}</div>
+        ${r.steps.map(s => `<div class="step">${s}</div>`).join('')}
+      </div>`;
+    container.appendChild(card);
+  });
+}
+</script>
+</body>
+</html>
