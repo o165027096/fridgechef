@@ -36,22 +36,25 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { ingredients, diet, goal, count = 10 } = req.body;
+  const { ingredients, diet, goal, count = 10, variety = false } = req.body;
   if (!ingredients || ingredients.length === 0) {
     return res.status(400).json({ error: 'No ingredients provided' });
   }
 
-  // Check server-side cache
+  // Check server-side cache (skip if variety requested)
   const key = getCacheKey(ingredients, diet || 'none', goal || 'none', count);
-  const cached = await redisGet(key);
-  if (cached) {
-    return res.status(200).json({ recipes: cached, fromCache: true });
+  if (!variety) {
+    const cached = await redisGet(key);
+    if (cached) {
+      return res.status(200).json({ recipes: cached, fromCache: true });
+    }
   }
 
   const dietNote = diet && diet !== 'none' ? `Dietary preference: ${diet}.` : '';
   const goalNote = goal && goal !== 'none' ? `Fitness goal: ${goal}.` : '';
+  const varietyNote = variety ? `Be creative and suggest DIFFERENT recipes than usual — explore less common cuisines and cooking styles.` : '';
 
-  const prompt = `You are a professional chef and nutritionist. The user has these ingredients: ${ingredients.join(', ')}. ${dietNote} ${goalNote}
+  const prompt = `You are a professional chef and nutritionist. The user has these ingredients: ${ingredients.join(', ')}. ${dietNote} ${goalNote} ${varietyNote}
 Generate exactly ${count} recipes using mainly these ingredients (basic pantry items like salt, oil, pepper are available).
 Respond ONLY with valid JSON, no markdown, no explanation. Use this exact format:
 {"recipes":[{"name":"Recipe Name","time":"25 mins","difficulty":"Easy","servings":2,"description":"One sentence overview.","fitness_tip":"Why this suits the fitness goal.","ingredients":["200g chicken breast","2 cups rice"],"seasoning":["1 tsp salt","2 tbsp soy sauce","0.5 tsp black pepper"],"nutrition":{"calories":450,"protein":38,"carbs":42,"fat":9,"fiber":3,"sugar":2},"steps":["Step 1 detail.","Step 2 detail."]}]}

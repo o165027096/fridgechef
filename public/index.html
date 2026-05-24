@@ -190,6 +190,45 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .price-sub{font-size:12px;color:#555;text-align:center;margin-bottom:18px}
 .upgrade-btn{width:100%;padding:14px;border-radius:12px;background:#1D9E75;border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
 .maybe-btn{width:100%;padding:10px;border-radius:12px;background:transparent;border:1px solid #333;color:#888;font-size:13px;cursor:pointer}
+
+/* ── Saved badge on hero ── */
+.saved-hero-btn{display:flex;align-items:center;gap:6px;margin:10px auto 0;padding:7px 16px;border-radius:99px;background:#222;border:1px solid #333;color:#aaa;font-size:12px;cursor:pointer;transition:all 0.15s}
+.saved-hero-btn:hover{border-color:#EF9F27;color:#EF9F27}
+.saved-count{background:#EF9F27;color:#111;font-size:10px;font-weight:700;padding:1px 6px;border-radius:99px;margin-left:2px}
+
+/* ── Refresh button ── */
+.refresh-btn{padding:7px 14px;border-radius:99px;border:1px solid #333;background:transparent;color:#888;font-size:12px;cursor:pointer;transition:all 0.15s}
+.refresh-btn:hover{border-color:#1D9E75;color:#1D9E75}
+
+/* ── Saved view ── */
+.saved-header{background:#111;padding:14px 16px;border-bottom:1px solid #222;display:flex;align-items:center;gap:10px}
+.saved-header h2{font-size:15px;font-weight:600;flex:1}
+.saved-list{padding:10px 14px 20px}
+.saved-item{border:1px solid #2a2a2a;border-radius:14px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color 0.15s}
+.saved-item:hover{border-color:#444}
+.saved-item-info{flex:1}
+.saved-item-name{font-size:13px;font-weight:500;color:#fff;margin-bottom:2px}
+.saved-item-meta{font-size:11px;color:#555}
+.saved-item-kcal{background:#2a2000;color:#EF9F27;font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;white-space:nowrap}
+.unsave-btn{background:none;border:none;color:#555;font-size:16px;cursor:pointer;padding:4px;transition:color 0.15s}
+.unsave-btn:hover{color:#E24B4A}
+.empty-saved{text-align:center;padding:48px 20px;color:#555;font-size:13px}
+
+/* ── Recipe Detail Modal ── */
+.detail-overlay{position:fixed;inset:0;background:#1a1a1a;z-index:200;overflow-y:auto;display:none;max-width:390px;margin:0 auto}
+.detail-overlay.open{display:block}
+.detail-topbar{position:sticky;top:0;background:#1a1a1aee;backdrop-filter:blur(8px);padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #222;z-index:10}
+.detail-back{background:none;border:none;color:#888;font-size:13px;cursor:pointer;padding:0}
+.detail-back:hover{color:#fff}
+.detail-topbar-title{flex:1;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.detail-save-btn{padding:6px 14px;border-radius:99px;border:1px solid #333;background:transparent;color:#888;font-size:12px;cursor:pointer;transition:all 0.15s;white-space:nowrap}
+.detail-save-btn.saved{border-color:#EF9F27;color:#EF9F27;background:#2a1e00}
+.detail-save-btn:hover{border-color:#EF9F27;color:#EF9F27}
+.detail-body{padding:16px}
+.detail-hero{margin-bottom:14px}
+.detail-name{font-size:18px;font-weight:700;margin-bottom:6px}
+.detail-meta{font-size:12px;color:#666;margin-bottom:6px}
+.detail-desc{font-size:13px;color:#888;line-height:1.6}
 </style>
 </head>
 <body>
@@ -230,6 +269,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="hero-icon">🍳</div>
       <h1>FridgeChef</h1>
       <p>Scan your fridge, get personalized recipes</p>
+      <button class="saved-hero-btn" id="saved-hero-btn">★ 我的食譜 <span class="saved-count" id="saved-count">0</span></button>
     </div>
 
     <div class="content">
@@ -329,8 +369,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
     <div class="results-nav">
       <button class="back-btn" id="back-btn">← Try different ingredients</button>
-      <span class="page-info" id="page-range"></span>
+      <button class="refresh-btn" id="refresh-btn">🔄 換一批</button>
     </div>
+    <div style="padding:0 16px 8px;display:flex;justify-content:flex-end"><span class="page-info" id="page-range"></span></div>
     <div id="recipes-container" class="recipe-list"></div>
     <div class="pagination">
       <button class="page-btn" id="prev-btn" disabled>← Prev</button>
@@ -339,6 +380,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
   </div>
 
+  <!-- ══ SAVED RECIPES ══ -->
+  <div id="view-saved" style="display:none">
+    <div class="saved-header">
+      <button class="back-btn" id="saved-back-btn">← 返回</button>
+      <h2>我的食譜</h2>
+    </div>
+    <div class="saved-list" id="saved-list"></div>
+  </div>
+
+</div>
+
+<!-- ══ Recipe Detail Modal ══ -->
+<div class="detail-overlay" id="detail-overlay">
+  <div class="detail-topbar">
+    <button class="detail-back" id="detail-back">← 返回</button>
+    <span class="detail-topbar-title" id="detail-topbar-title"></span>
+    <button class="detail-save-btn" id="detail-save-btn">★ 儲存</button>
+  </div>
+  <div class="detail-body" id="detail-body"></div>
 </div>
 
 <!-- ══ Settings Modal ══ -->
@@ -423,6 +483,28 @@ function saveUsage(count) {
   localStorage.setItem('fc_daily_usage', JSON.stringify({date:today, count}));
 }
 function isPro() { return localStorage.getItem('fc_is_pro') === 'true'; }
+function loadSaved() {
+  try { return JSON.parse(localStorage.getItem('fc_saved_recipes')) || []; } catch { return []; }
+}
+function saveSavedList(list) {
+  localStorage.setItem('fc_saved_recipes', JSON.stringify(list));
+}
+function isRecipeSaved(name) { return loadSaved().some(r => r.name === name); }
+function toggleSave(recipe) {
+  let list = loadSaved();
+  if (list.some(r => r.name === recipe.name)) {
+    list = list.filter(r => r.name !== recipe.name);
+  } else {
+    list.unshift(recipe);
+  }
+  saveSavedList(list);
+  updateSavedCount();
+  return list.some(r => r.name === recipe.name);
+}
+function updateSavedCount() {
+  const n = loadSaved().length;
+  document.getElementById('saved-count').textContent = n;
+}
 
 // ── Recipe cache ──────────────────────────────────────
 const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -607,12 +689,127 @@ ingredientInput.addEventListener('keydown', e => {
 
 // ── View switching ────────────────────────────────────
 function show(id) {
-  ['view-home','view-loading','view-results'].forEach(v => {
+  ['view-home','view-loading','view-results','view-saved'].forEach(v => {
     document.getElementById(v).style.display = (v === id) ? 'block' : 'none';
   });
 }
 
 document.getElementById('back-btn').addEventListener('click', () => show('view-home'));
+
+// ── Saved view ────────────────────────────────────────
+document.getElementById('saved-hero-btn').addEventListener('click', () => {
+  renderSavedView();
+  show('view-saved');
+});
+document.getElementById('saved-back-btn').addEventListener('click', () => show('view-home'));
+
+function renderSavedView() {
+  const list = loadSaved();
+  const container = document.getElementById('saved-list');
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty-saved">還沒有儲存的食譜<br>搜尋食譜後點 ★ 儲存</div>';
+    return;
+  }
+  container.innerHTML = '';
+  list.forEach(r => {
+    const item = document.createElement('div');
+    item.className = 'saved-item';
+    item.innerHTML = `
+      <div class="saved-item-info">
+        <div class="saved-item-name">${esc(r.name)}</div>
+        <div class="saved-item-meta">⏱ ${esc(r.time||'—')} · ${esc(r.difficulty||'—')} · ${r.servings||1} serving${r.servings>1?'s':''}</div>
+      </div>
+      <div class="saved-item-kcal">${(r.nutrition||{}).calories||'—'} kcal</div>
+      <button class="unsave-btn" title="移除">✕</button>`;
+    item.querySelector('.saved-item-info').addEventListener('click', () => openDetail(r));
+    item.querySelector('.saved-item-kcal').addEventListener('click', () => openDetail(r));
+    item.querySelector('.unsave-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      toggleSave(r);
+      renderSavedView();
+    });
+    container.appendChild(item);
+  });
+}
+
+// ── Recipe Detail Modal ───────────────────────────────
+let detailRecipe = null;
+
+function openDetail(r) {
+  detailRecipe = r;
+  const n = r.nutrition || {};
+  const saved = isRecipeSaved(r.name);
+  const firstIng = (r.ingredients && r.ingredients[0]) ? encodeURIComponent(r.ingredients[0].replace(/[\d]+g?\s*/,'').trim()) : 'ingredients';
+  const amazonUrl = `https://www.amazon.com/s?k=${firstIng}&tag=${AMAZON_TAG}`;
+
+  document.getElementById('detail-topbar-title').textContent = r.name;
+  const saveBtn = document.getElementById('detail-save-btn');
+  saveBtn.textContent = saved ? '★ 已儲存' : '☆ 儲存';
+  saveBtn.className = 'detail-save-btn' + (saved ? ' saved' : '');
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="detail-hero">
+      <div class="detail-name">${esc(r.name)}</div>
+      <div class="detail-meta">⏱ ${esc(r.time||'—')} &nbsp;·&nbsp; ${esc(r.difficulty||'—')} &nbsp;·&nbsp; ${r.servings||1} serving${r.servings>1?'s':''}</div>
+      <div class="detail-desc">${esc(r.description||'')}</div>
+    </div>
+    ${r.fitness_tip ? `<div class="fitness-tip" style="margin-bottom:14px">
+      <div class="fitness-tip-label">Fitness Tip</div>
+      <p>${esc(r.fitness_tip)}</p>
+    </div>` : ''}
+    <div class="nutrition-panel" style="margin-bottom:14px">
+      <div class="nutrition-title">Nutrition Facts</div>
+      <div class="nutrition-calories"><span class="label">Calories</span><span class="value">${n.calories||0}</span></div>
+      ${nutritionRow('Protein',n.protein||0,'g','#378ADD',200)}
+      ${nutritionRow('Carbs',n.carbs||0,'g','#EF9F27',300)}
+      ${nutritionRow('Fat',n.fat||0,'g','#D4537E',100)}
+      ${nutritionRow('Fiber',n.fiber||0,'g','#555555',38)}
+      ${nutritionRow('Sugar',n.sugar||0,'g','#555555',50)}
+    </div>
+    ${r.ingredients&&r.ingredients.length?`<div class="pill-section">
+      <div class="pill-section-label">Ingredients</div>
+      <div class="pill-row">${r.ingredients.map(i=>`<span class="ing-pill">${esc(i)}</span>`).join('')}</div>
+    </div>`:''}
+    ${r.seasoning&&r.seasoning.length?`<div class="pill-section">
+      <div class="pill-section-label">Seasoning</div>
+      <div class="pill-row">${r.seasoning.map(s=>`<span class="sea-pill">🧂 ${esc(s)}</span>`).join('')}</div>
+    </div>`:''}
+    ${r.steps&&r.steps.length?`<div class="steps-section">
+      <div class="steps-label">Instructions</div>
+      ${r.steps.map((s,i)=>`<div class="step"><span class="step-num">${i+1}.</span>${esc(s)}</div>`).join('')}
+    </div>`:''}
+    <div class="card-actions" style="margin-top:8px">
+      <button class="log-btn ${loggedRecipes.has(r.name)?'logged':''}" id="detail-log-btn" data-nutrition='${JSON.stringify(n)}' data-name="${esc(r.name)}">${loggedRecipes.has(r.name)?'✓ Logged':'+ Log this meal'}</button>
+      <a class="amazon-btn" href="${amazonUrl}" target="_blank" rel="noopener">🛒 Buy ingredients on Amazon</a>
+    </div>`;
+
+  document.getElementById('detail-log-btn').addEventListener('click', function() {
+    if (this.classList.contains('logged')) return;
+    const nutrition = JSON.parse(this.dataset.nutrition);
+    const items = loadLogged();
+    items.push(nutrition);
+    saveLogged(items);
+    loggedRecipes.add(this.dataset.name);
+    this.textContent = '✓ Logged';
+    this.classList.add('logged');
+    renderTracker();
+  });
+
+  document.getElementById('detail-overlay').classList.add('open');
+  document.getElementById('detail-overlay').scrollTop = 0;
+}
+
+document.getElementById('detail-back').addEventListener('click', () => {
+  document.getElementById('detail-overlay').classList.remove('open');
+});
+
+document.getElementById('detail-save-btn').addEventListener('click', () => {
+  if (!detailRecipe) return;
+  const nowSaved = toggleSave(detailRecipe);
+  const btn = document.getElementById('detail-save-btn');
+  btn.textContent = nowSaved ? '★ 已儲存' : '☆ 儲存';
+  btn.className = 'detail-save-btn' + (nowSaved ? ' saved' : '');
+});
 
 // ── Paywall ───────────────────────────────────────────
 function showPaywall() {
@@ -711,89 +908,26 @@ function renderPage() {
   });
 }
 
-// ── Recipe card ───────────────────────────────────────
+// ── Recipe card (tap to open detail modal) ───────────
 function buildCard(r, num) {
   const card = document.createElement('div');
   card.className = 'recipe-card';
-
   const n = r.nutrition || {};
   const kcal = n.calories || '—';
-
-  // Amazon search URL from first ingredient
-  const firstIng = (r.ingredients && r.ingredients[0]) ? encodeURIComponent(r.ingredients[0].replace(/[\d]+g?\s*/,'').trim()) : 'ingredients';
-  const amazonUrl = `https://www.amazon.com/s?k=${firstIng}&tag=${AMAZON_TAG}`;
+  const saved = isRecipeSaved(r.name);
 
   card.innerHTML = `
-    <div class="recipe-head">
+    <div class="recipe-head" style="cursor:pointer">
       <div class="recipe-num">${num}</div>
       <div class="recipe-title">
         <div class="recipe-name">${esc(r.name)}</div>
-        <div class="recipe-meta">⏱ ${esc(r.time || '—')} &nbsp;·&nbsp; ${esc(r.difficulty || '—')} &nbsp;·&nbsp; ${r.servings || 1} serving${r.servings > 1 ? 's':''}</div>
+        <div class="recipe-meta">⏱ ${esc(r.time||'—')} &nbsp;·&nbsp; ${esc(r.difficulty||'—')} &nbsp;·&nbsp; ${r.servings||1} serving${r.servings>1?'s':''}</div>
       </div>
       <div class="calorie-badge">${kcal} kcal</div>
-      <div class="chevron">▾</div>
-    </div>
-    <div class="recipe-body">
-      <div class="recipe-desc">${esc(r.description || '')}</div>
-
-      ${r.fitness_tip ? `<div class="fitness-tip">
-        <div class="fitness-tip-label">Fitness Tip</div>
-        <p>${esc(r.fitness_tip)}</p>
-      </div>` : ''}
-
-      <div class="nutrition-panel">
-        <div class="nutrition-title">Nutrition Facts</div>
-        <div class="nutrition-calories">
-          <span class="label">Calories</span>
-          <span class="value">${n.calories || 0}</span>
-        </div>
-        ${nutritionRow('Protein',  n.protein  || 0, 'g', '#378ADD', 200)}
-        ${nutritionRow('Carbs',    n.carbs    || 0, 'g', '#EF9F27', 300)}
-        ${nutritionRow('Fat',      n.fat      || 0, 'g', '#D4537E', 100)}
-        ${nutritionRow('Fiber',    n.fiber    || 0, 'g', '#555555', 38)}
-        ${nutritionRow('Sugar',    n.sugar    || 0, 'g', '#555555', 50)}
-      </div>
-
-      ${r.ingredients && r.ingredients.length ? `<div class="pill-section">
-        <div class="pill-section-label">Ingredients</div>
-        <div class="pill-row">${r.ingredients.map(i => `<span class="ing-pill">${esc(i)}</span>`).join('')}</div>
-      </div>` : ''}
-
-      ${r.seasoning && r.seasoning.length ? `<div class="pill-section">
-        <div class="pill-section-label">Seasoning</div>
-        <div class="pill-row">${r.seasoning.map(s => `<span class="sea-pill">🧂 ${esc(s)}</span>`).join('')}</div>
-      </div>` : ''}
-
-      ${r.steps && r.steps.length ? `<div class="steps-section">
-        <div class="steps-label">Instructions</div>
-        ${r.steps.map((s, i) => `<div class="step"><span class="step-num">${i+1}.</span>${esc(s)}</div>`).join('')}
-      </div>` : ''}
-
-      <div class="card-actions">
-        <button class="log-btn ${loggedRecipes.has(r.name) ? 'logged' : ''}" data-name="${esc(r.name)}" data-nutrition='${JSON.stringify(n)}'>${loggedRecipes.has(r.name) ? '✓ Logged' : '+ Log this meal'}</button>
-        <a class="amazon-btn" href="${amazonUrl}" target="_blank" rel="noopener">🛒 Buy ingredients on Amazon</a>
-      </div>
+      <span style="font-size:14px;margin-left:6px;color:${saved?'#EF9F27':'#444'}">${saved?'★':'☆'}</span>
     </div>`;
 
-  // Expand / collapse
-  card.querySelector('.recipe-head').addEventListener('click', () => {
-    card.classList.toggle('open');
-  });
-
-  // Log meal
-  card.querySelector('.log-btn').addEventListener('click', function() {
-    if (this.classList.contains('logged')) return;
-    const nutrition = JSON.parse(this.dataset.nutrition);
-    const recipeName = this.dataset.name;
-    const items = loadLogged();
-    items.push(nutrition);
-    saveLogged(items);
-    loggedRecipes.add(recipeName);
-    this.textContent = '✓ Logged';
-    this.classList.add('logged');
-    renderTracker();
-  });
-
+  card.addEventListener('click', () => openDetail(r));
   return card;
 }
 
@@ -810,8 +944,41 @@ function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── Refresh (variety) ─────────────────────────────────
+document.getElementById('refresh-btn').addEventListener('click', async () => {
+  const items = [...tagRow.querySelectorAll('.tag.active')].map(t => t.dataset.v);
+  if (items.length === 0) return;
+
+  if (!isPro()) {
+    const count = loadUsage();
+    if (count >= 3) { showPaywall(); return; }
+    saveUsage(count + 1);
+  }
+
+  const recipeCount = allRecipes.length || 5;
+  show('view-loading');
+  try {
+    const res = await fetch('/api/recipes', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ingredients: items, diet, goal, count: recipeCount, variety: true})
+    });
+    const data = await res.json();
+    if (!data.recipes || data.recipes.length === 0) throw new Error('No recipes');
+    allRecipes = data.recipes;
+    currentPage = 1;
+    document.getElementById('results-title').textContent = `✅ ${allRecipes.length} recipes found`;
+    document.getElementById('results-sub').textContent = 'New batch · ' + items.slice(0,4).join(', ') + (items.length > 4 ? '…' : '');
+    renderPage();
+    show('view-results');
+  } catch {
+    show('view-results');
+  }
+});
+
 // ── Init ──────────────────────────────────────────────
 renderTracker();
+updateSavedCount();
 </script>
 </body>
 </html>
