@@ -676,8 +676,9 @@ document.getElementById('go-btn').addEventListener('click', async () => {
     allRecipes = data.recipes;
     cacheSet(key, allRecipes);
 
-    document.getElementById('results-title').textContent = `✅ ${allRecipes.length} recipes found`;
-    document.getElementById('results-sub').textContent = 'Using: ' + items.slice(0,4).join(', ') + (items.length > 4 ? '…' : '');
+    const fromCache = !!data.fromCache;
+    document.getElementById('results-title').textContent = `${fromCache ? '⚡' : '✅'} ${allRecipes.length} recipes found`;
+    document.getElementById('results-sub').textContent = (fromCache ? 'From cache · ' : 'Using: ') + items.slice(0,4).join(', ') + (items.length > 4 ? '…' : '');
     renderPage();
     show('view-results');
   } catch (err) {

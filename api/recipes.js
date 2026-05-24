@@ -1,3 +1,34 @@
+const CACHE_TTL = 60 * 60 * 24 * 30; // 30 days in seconds
+
+function getCacheKey(ingredients, diet, goal, count) {
+  return 'recipes:' + [...ingredients].sort().join(',') + '|' + diet + '|' + goal + '|' + count;
+}
+
+async function redisGet(key) {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+  try {
+    const res = await fetch(`${url}/get/${encodeURIComponent(key)}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    return data.result ? JSON.parse(data.result) : null;
+  } catch { return null; }
+}
+
+async function redisSet(key, value) {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return;
+  try {
+    await fetch(`${url}/set/${encodeURIComponent(key)}/${encodeURIComponent(JSON.stringify(value))}?ex=${CACHE_TTL}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  } catch {}
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -8,6 +39,13 @@ export default async function handler(req, res) {
   const { ingredients, diet, goal, count = 10 } = req.body;
   if (!ingredients || ingredients.length === 0) {
     return res.status(400).json({ error: 'No ingredients provided' });
+  }
+
+  // Check server-side cache
+  const key = getCacheKey(ingredients, diet || 'none', goal || 'none', count);
+  const cached = await redisGet(key);
+  if (cached) {
+    return res.status(200).json({ recipes: cached, fromCache: true });
   }
 
   const dietNote = diet && diet !== 'none' ? `Dietary preference: ${diet}.` : '';
@@ -37,6 +75,10 @@ Rules: nutrition values are per serving (numbers only, no units). fitness_tip mu
     const text = data.choices[0].message.content;
     const clean = text.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(clean);
+
+    // Save to Redis cache
+    await redisSet(key, parsed.recipes);
+
     return res.status(200).json(parsed);
   } catch (err) {
     console.error(err);
