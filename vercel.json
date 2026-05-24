@@ -9,5 +9,9 @@
     { "src": "/api/recipes", "dest": "/api/recipes.js" },
     { "src": "/api/scan", "dest": "/api/scan.js" },
     { "src": "/(.*)", "dest": "/public/index.html" }
-  ]
+  ],
+  "functions": {
+    "api/recipes.js": { "maxDuration": 60 },
+    "api/scan.js": { "maxDuration": 30 }
+  }
 }

@@ -195,35 +195,35 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <body>
 <div class="phone">
 
-  <!-- ══ HOME ══ -->
-  <div id="view-home">
-
-    <!-- Daily Tracker -->
-    <div class="tracker" id="tracker-bar">
-      <div class="tracker-title">Today's nutrition</div>
-      <div class="tracker-grid">
-        <div class="tracker-metric">
-          <div class="label">Calories</div>
-          <div class="value" id="t-cal">0 / <span id="g-cal">2000</span></div>
-          <div class="bar-bg"><div class="bar-fill cal-fill" id="b-cal" style="width:0%"></div></div>
-        </div>
-        <div class="tracker-metric">
-          <div class="label">Protein</div>
-          <div class="value" id="t-pro">0 / <span id="g-pro">150</span>g</div>
-          <div class="bar-bg"><div class="bar-fill pro-fill" id="b-pro" style="width:0%"></div></div>
-        </div>
-        <div class="tracker-metric">
-          <div class="label">Carbs</div>
-          <div class="value" id="t-carb">0 / <span id="g-carb">200</span>g</div>
-          <div class="bar-bg"><div class="bar-fill carb-fill" id="b-carb" style="width:0%"></div></div>
-        </div>
-        <div class="tracker-metric">
-          <div class="label">Fat</div>
-          <div class="value" id="t-fat">0 / <span id="g-fat">65</span>g</div>
-          <div class="bar-bg"><div class="bar-fill fat-fill" id="b-fat" style="width:0%"></div></div>
-        </div>
+  <!-- Daily Tracker — always visible -->
+  <div class="tracker" id="tracker-bar">
+    <div class="tracker-title">Today's nutrition</div>
+    <div class="tracker-grid">
+      <div class="tracker-metric">
+        <div class="label">Calories</div>
+        <div class="value" id="t-cal">0 / <span id="g-cal">2000</span></div>
+        <div class="bar-bg"><div class="bar-fill cal-fill" id="b-cal" style="width:0%"></div></div>
+      </div>
+      <div class="tracker-metric">
+        <div class="label">Protein</div>
+        <div class="value" id="t-pro">0 / <span id="g-pro">150</span>g</div>
+        <div class="bar-bg"><div class="bar-fill pro-fill" id="b-pro" style="width:0%"></div></div>
+      </div>
+      <div class="tracker-metric">
+        <div class="label">Carbs</div>
+        <div class="value" id="t-carb">0 / <span id="g-carb">200</span>g</div>
+        <div class="bar-bg"><div class="bar-fill carb-fill" id="b-carb" style="width:0%"></div></div>
+      </div>
+      <div class="tracker-metric">
+        <div class="label">Fat</div>
+        <div class="value" id="t-fat">0 / <span id="g-fat">65</span>g</div>
+        <div class="bar-bg"><div class="bar-fill fat-fill" id="b-fat" style="width:0%"></div></div>
       </div>
     </div>
+  </div>
+
+  <!-- ══ HOME ══ -->
+  <div id="view-home">
 
     <!-- Hero -->
     <div class="hero">
@@ -294,8 +294,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <div class="section-label">Generate</div>
       <div class="count-row">
         <select id="recipe-count">
-          <option value="5">5 Recipes</option>
-          <option value="10" selected>10 Recipes</option>
+          <option value="5" selected>5 Recipes</option>
+          <option value="10">10 Recipes</option>
         </select>
         <select id="per-page">
           <option value="5" selected>5 per page</option>
@@ -391,6 +391,7 @@ const AMAZON_TAG = 'fridgechef-20';
 
 let diet = 'none', goal = 'none';
 let allRecipes = [], currentPage = 1, perPage = 5;
+const loggedRecipes = new Set(); // track logged recipe names this session
 
 // ── localStorage helpers ───────────────────────────────
 function loadGoals() {
@@ -769,7 +770,7 @@ function buildCard(r, num) {
       </div>` : ''}
 
       <div class="card-actions">
-        <button class="log-btn" data-nutrition='${JSON.stringify(n)}'>+ Log this meal</button>
+        <button class="log-btn ${loggedRecipes.has(r.name) ? 'logged' : ''}" data-name="${esc(r.name)}" data-nutrition='${JSON.stringify(n)}'>${loggedRecipes.has(r.name) ? '✓ Logged' : '+ Log this meal'}</button>
         <a class="amazon-btn" href="${amazonUrl}" target="_blank" rel="noopener">🛒 Buy ingredients on Amazon</a>
       </div>
     </div>`;
@@ -783,9 +784,11 @@ function buildCard(r, num) {
   card.querySelector('.log-btn').addEventListener('click', function() {
     if (this.classList.contains('logged')) return;
     const nutrition = JSON.parse(this.dataset.nutrition);
+    const recipeName = this.dataset.name;
     const items = loadLogged();
     items.push(nutrition);
     saveLogged(items);
+    loggedRecipes.add(recipeName);
     this.textContent = '✓ Logged';
     this.classList.add('logged');
     renderTracker();
