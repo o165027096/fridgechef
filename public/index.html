@@ -423,6 +423,22 @@ function saveUsage(count) {
 }
 function isPro() { return localStorage.getItem('fc_is_pro') === 'true'; }
 
+// ── Recipe cache ──────────────────────────────────────
+const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+function cacheKey(ingredients, diet, goal, count) {
+  return 'fc_cache_' + [...ingredients].sort().join(',') + '|' + diet + '|' + goal + '|' + count;
+}
+function cacheGet(key) {
+  try {
+    const d = JSON.parse(localStorage.getItem(key));
+    if (d && Date.now() - d.ts < CACHE_TTL) return d.recipes;
+  } catch {}
+  return null;
+}
+function cacheSet(key, recipes) {
+  try { localStorage.setItem(key, JSON.stringify({ts: Date.now(), recipes})); } catch {}
+}
+
 // ── Tracker ───────────────────────────────────────────
 function renderTracker() {
   const goals = loadGoals();
@@ -618,12 +634,6 @@ document.getElementById('paywall-modal').addEventListener('click', e => {
 document.getElementById('go-btn').addEventListener('click', async () => {
   document.getElementById('error-area').innerHTML = '';
 
-  if (!isPro()) {
-    const count = loadUsage();
-    if (count >= 3) { showPaywall(); return; }
-    saveUsage(count + 1);
-  }
-
   const items = [...tagRow.querySelectorAll('.tag.active')].map(t => t.dataset.v);
   if (items.length === 0) {
     document.getElementById('error-area').innerHTML = '<div class="error-box">Please select at least one ingredient.</div>';
@@ -633,6 +643,25 @@ document.getElementById('go-btn').addEventListener('click', async () => {
   const recipeCount = parseInt(document.getElementById('recipe-count').value);
   perPage = parseInt(document.getElementById('per-page').value);
   currentPage = 1;
+
+  // Check cache first — no API call, no usage counted
+  const key = cacheKey(items, diet, goal, recipeCount);
+  const cached = cacheGet(key);
+  if (cached) {
+    allRecipes = cached;
+    document.getElementById('results-title').textContent = `⚡ ${allRecipes.length} recipes found`;
+    document.getElementById('results-sub').textContent = 'From cache · ' + items.slice(0,4).join(', ') + (items.length > 4 ? '…' : '');
+    renderPage();
+    show('view-results');
+    return;
+  }
+
+  // Freemium gate — only applies to real API calls
+  if (!isPro()) {
+    const count = loadUsage();
+    if (count >= 3) { showPaywall(); return; }
+    saveUsage(count + 1);
+  }
 
   show('view-loading');
 
@@ -645,6 +674,7 @@ document.getElementById('go-btn').addEventListener('click', async () => {
     const data = await res.json();
     if (!data.recipes || data.recipes.length === 0) throw new Error('No recipes');
     allRecipes = data.recipes;
+    cacheSet(key, allRecipes);
 
     document.getElementById('results-title').textContent = `✅ ${allRecipes.length} recipes found`;
     document.getElementById('results-sub').textContent = 'Using: ' + items.slice(0,4).join(', ') + (items.length > 4 ? '…' : '');
