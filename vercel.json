@@ -2,10 +2,12 @@
   "version": 2,
   "builds": [
     { "src": "public/index.html", "use": "@vercel/static" },
-    { "src": "api/recipes.js", "use": "@vercel/node" }
+    { "src": "api/recipes.js", "use": "@vercel/node" },
+    { "src": "api/scan.js", "use": "@vercel/node" }
   ],
   "routes": [
     { "src": "/api/recipes", "dest": "/api/recipes.js" },
+    { "src": "/api/scan", "dest": "/api/scan.js" },
     { "src": "/(.*)", "dest": "/public/index.html" }
   ]
 }

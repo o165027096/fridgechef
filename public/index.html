@@ -3,68 +3,269 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>FridgeChef — What's for dinner?</title>
+<title>FridgeChef — AI Recipe Generator</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f0f;color:#fff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
-.phone{width:100%;max-width:390px;background:#1a1a1a;border-radius:32px;overflow:hidden;border:1px solid #2a2a2a}
-.hero{background:#111;padding:32px 20px 28px;text-align:center;border-bottom:1px solid #222}
-.hero-icon{width:64px;height:64px;background:#1D9E75;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px}
-.hero h1{font-size:22px;font-weight:600;margin-bottom:6px;color:#fff}
-.hero p{font-size:14px;color:#888}
-.content{padding:20px}
-.label{font-size:11px;color:#666;margin-bottom:10px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
-.tag-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
-.tag{display:flex;align-items:center;gap:6px;padding:7px 12px;background:#222;border:1px solid #333;border-radius:99px;font-size:13px;color:#aaa;cursor:pointer;transition:all 0.15s;user-select:none}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f0f;color:#fff;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:16px}
+.phone{width:100%;max-width:390px;background:#1a1a1a;border-radius:32px;overflow:hidden;border:1px solid #2a2a2a;margin:0 auto}
+
+/* ── Daily Tracker ── */
+.tracker{background:#111;padding:12px 16px;border-bottom:1px solid #222;cursor:pointer}
+.tracker-title{font-size:10px;color:#555;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:8px}
+.tracker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tracker-metric{background:#1a1a1a;border-radius:10px;padding:6px 8px}
+.tracker-metric .label{font-size:9px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
+.tracker-metric .value{font-size:12px;font-weight:600;margin:2px 0}
+.tracker-metric .bar-bg{height:3px;background:#2a2a2a;border-radius:2px;overflow:hidden}
+.tracker-metric .bar-fill{height:3px;border-radius:2px;transition:width 0.3s}
+.cal-fill{background:#1D9E75}
+.pro-fill{background:#378ADD}
+.carb-fill{background:#EF9F27}
+.fat-fill{background:#D4537E}
+
+/* ── Hero ── */
+.hero{background:#111;padding:24px 20px 20px;text-align:center;border-bottom:1px solid #222}
+.hero-icon{width:56px;height:56px;background:#1D9E75;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px}
+.hero h1{font-size:19px;font-weight:600;margin-bottom:4px}
+.hero p{font-size:13px;color:#888}
+.content{padding:18px 16px}
+.section-label{font-size:10px;color:#666;margin-bottom:8px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase}
+
+/* ── Goal pills ── */
+.goal-row{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.goal-btn{padding:7px 13px;border-radius:99px;font-size:12px;border:1px solid #333;background:transparent;color:#888;cursor:pointer;transition:all 0.15s}
+.goal-btn.on{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.goal-btn:hover{border-color:#555;color:#ccc}
+
+/* ── Fridge Scanner ── */
+.scanner-area{border:1.5px dashed #333;border-radius:16px;padding:20px;text-align:center;cursor:pointer;transition:border-color 0.15s;margin-bottom:6px;position:relative;overflow:hidden}
+.scanner-area:hover{border-color:#1D9E75}
+.scanner-area input{display:none}
+.scanner-icon{font-size:28px;margin-bottom:8px}
+.scanner-text{font-size:13px;color:#888}
+.scanner-sub{font-size:11px;color:#555;margin-top:4px}
+.scanner-preview{width:100%;border-radius:10px;max-height:140px;object-fit:cover;display:none}
+.scanner-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;flex-direction:column;gap:8px}
+.scanner-overlay.active{display:flex}
+.scanner-spinner{width:32px;height:32px;border:2px solid #333;border-top-color:#1D9E75;border-radius:50%;animation:spin 0.8s linear infinite}
+.scanner-overlay p{font-size:12px;color:#aaa}
+
+/* ── Scan banner ── */
+.scan-banner{background:#0d2a1f;border:1px solid #1D9E75;border-radius:10px;padding:10px 12px;font-size:12px;color:#5DCAA5;margin-bottom:12px;display:none;line-height:1.5}
+.scan-banner span{color:#888;cursor:pointer;text-decoration:underline;margin-left:6px}
+
+/* ── Tags ── */
+.tag-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.tag{display:flex;align-items:center;gap:5px;padding:6px 11px;background:#222;border:1px solid #333;border-radius:99px;font-size:12px;color:#aaa;cursor:pointer;transition:all 0.15s;user-select:none}
 .tag.active{background:#1D9E75;border-color:#1D9E75;color:#fff}
+.tag.scanned{border-color:#5DCAA5;color:#5DCAA5}
+.tag.scanned.active{background:#1D9E75;border-color:#1D9E75;color:#fff}
 .tag:hover{border-color:#555}
-.input-row{display:flex;gap:8px;margin-bottom:20px}
-.input-row input{flex:1;font-size:14px;padding:0 14px;height:42px;border-radius:12px;border:1px solid #333;background:#222;color:#fff;outline:none;transition:border-color 0.15s}
+.input-row{display:flex;gap:8px;margin-bottom:18px}
+.input-row input{flex:1;font-size:13px;padding:0 12px;height:40px;border-radius:12px;border:1px solid #333;background:#222;color:#fff;outline:none;transition:border-color 0.15s}
 .input-row input:focus{border-color:#1D9E75}
 .input-row input::placeholder{color:#555}
-.add-btn{height:42px;width:42px;border-radius:12px;background:#1D9E75;border:none;color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity 0.15s}
+.add-btn{height:40px;width:40px;border-radius:12px;background:#1D9E75;border:none;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity 0.15s}
 .add-btn:hover{opacity:0.85}
-.diet-row{display:flex;gap:6px;margin-bottom:22px;flex-wrap:wrap}
-.diet-btn{padding:7px 14px;border-radius:99px;font-size:13px;border:1px solid #333;background:transparent;color:#888;cursor:pointer;transition:all 0.15s}
+
+/* ── Diet pills ── */
+.diet-row{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.diet-btn{padding:7px 13px;border-radius:99px;font-size:12px;border:1px solid #333;background:transparent;color:#888;cursor:pointer;transition:all 0.15s}
 .diet-btn.on{background:#1D9E75;border-color:#1D9E75;color:#fff}
 .diet-btn:hover{border-color:#555;color:#ccc}
-.go-btn{width:100%;padding:15px;border-radius:14px;background:#fff;color:#111;font-size:15px;font-weight:600;border:none;cursor:pointer;transition:opacity 0.15s;display:flex;align-items:center;justify-content:center;gap:8px}
+
+/* ── Count selectors ── */
+.count-row{display:flex;gap:10px;margin-bottom:20px}
+.count-row select{flex:1;font-size:13px;padding:8px 10px;border-radius:10px;border:1px solid #333;background:#222;color:#fff;outline:none;cursor:pointer}
+.count-row select:focus{border-color:#1D9E75}
+
+/* ── Go button ── */
+.go-btn{width:100%;padding:14px;border-radius:14px;background:#fff;color:#111;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:opacity 0.15s;display:flex;align-items:center;justify-content:center;gap:8px}
 .go-btn:hover{opacity:0.9}
-.go-btn:disabled{opacity:0.5;cursor:not-allowed}
-.error-box{background:#2a1010;border:1px solid #5a2020;border-radius:10px;padding:12px 14px;font-size:13px;color:#f08080;margin-top:12px}
-.loading{text-align:center;padding:48px 20px}
-.spinner{width:40px;height:40px;border:2px solid #333;border-top-color:#1D9E75;border-radius:50%;margin:0 auto 16px;animation:spin 0.8s linear infinite}
+.go-btn:disabled{opacity:0.45;cursor:not-allowed}
+.error-box{background:#2a1010;border:1px solid #5a2020;border-radius:10px;padding:10px 12px;font-size:12px;color:#f08080;margin-top:10px}
+
+/* ── Loading ── */
+.loading{text-align:center;padding:60px 20px}
+.loading-icon{font-size:40px;margin-bottom:16px}
+.spin-ring{width:48px;height:48px;border:3px solid #222;border-top-color:#1D9E75;border-radius:50%;margin:0 auto 16px;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading p{color:#888;font-size:14px}
-.results-header{padding:20px 20px 0}
-.back-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:#888;cursor:pointer;margin-bottom:16px;background:none;border:none;padding:0}
+.loading h2{font-size:16px;font-weight:600;margin-bottom:6px}
+.loading p{font-size:12px;color:#666}
+
+/* ── Results ── */
+.results-bar{background:#111;padding:14px 16px;border-bottom:1px solid #222}
+.results-bar h2{font-size:15px;font-weight:600;margin-bottom:2px}
+.results-bar p{font-size:12px;color:#666}
+.results-nav{padding:12px 16px 0;display:flex;align-items:center;justify-content:space-between}
+.back-btn{font-size:12px;color:#888;cursor:pointer;background:none;border:none;padding:0}
 .back-btn:hover{color:#ccc}
-.results-title{font-size:17px;font-weight:600;color:#fff;margin-bottom:4px}
-.results-sub{font-size:13px;color:#666;margin-bottom:16px}
-.recipe-card{margin:0 20px 12px;border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;cursor:pointer;transition:border-color 0.15s}
-.recipe-card:hover{border-color:#444}
-.recipe-head{padding:14px 16px;display:flex;align-items:center;gap:12px}
-.recipe-num{width:30px;height:30px;border-radius:50%;background:#1D9E75;color:#fff;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.recipe-name{font-size:15px;font-weight:500;color:#fff}
-.recipe-meta{font-size:12px;color:#666;margin-top:2px}
-.recipe-body{padding:0 16px 16px;border-top:1px solid #222;padding-top:12px}
-.recipe-desc{font-size:13px;color:#888;line-height:1.6;margin-bottom:10px}
-.step{font-size:13px;color:#ccc;margin-bottom:6px;padding-left:16px;position:relative;line-height:1.55}
-.step::before{content:"•";position:absolute;left:4px;color:#1D9E75}
-.pb{padding-bottom:20px}
+.page-info{font-size:12px;color:#555}
+.recipe-list{padding:10px 14px 14px}
+
+/* ── Recipe card ── */
+.recipe-card{border:1px solid #2a2a2a;border-radius:14px;overflow:hidden;margin-bottom:10px;transition:border-color 0.15s}
+.recipe-card:hover{border-color:#3a3a3a}
+.recipe-head{padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.recipe-num{width:28px;height:28px;border-radius:50%;background:#1D9E75;color:#fff;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.recipe-title{flex:1}
+.recipe-name{font-size:13px;font-weight:500;color:#fff}
+.recipe-meta{font-size:11px;color:#555;margin-top:2px}
+.calorie-badge{background:#2a2000;color:#EF9F27;font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px;white-space:nowrap}
+.chevron{font-size:11px;color:#555;transition:transform 0.2s;margin-left:6px}
+.recipe-card.open .chevron{transform:rotate(180deg)}
+
+/* ── Recipe body ── */
+.recipe-body{display:none;border-top:1px solid #222;padding:14px}
+.recipe-card.open .recipe-body{display:block}
+.recipe-desc{font-size:12px;color:#888;line-height:1.6;margin-bottom:12px}
+
+.fitness-tip{background:#0d2a1f;border:1px solid #1a4a30;border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.fitness-tip-label{font-size:10px;color:#1D9E75;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px}
+.fitness-tip p{font-size:12px;color:#7BC9A5;line-height:1.5}
+
+/* ── Nutrition facts ── */
+.nutrition-panel{border:1.5px solid #444;border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.nutrition-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;border-bottom:4px solid #fff;padding-bottom:4px;margin-bottom:6px}
+.nutrition-calories{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid #333;padding-bottom:6px;margin-bottom:6px}
+.nutrition-calories .label{font-size:11px;font-weight:600}
+.nutrition-calories .value{font-size:22px;font-weight:700}
+.nutrition-row{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.nutrition-row .n-label{font-size:11px;color:#aaa;width:70px;flex-shrink:0}
+.nutrition-row .n-bar-bg{flex:1;height:4px;background:#2a2a2a;border-radius:2px;overflow:hidden}
+.nutrition-row .n-bar{height:4px;border-radius:2px}
+.nutrition-row .n-val{font-size:11px;color:#ccc;width:38px;text-align:right;flex-shrink:0}
+
+/* ── Ingredient / seasoning pills ── */
+.pill-section{margin-bottom:12px}
+.pill-section-label{font-size:10px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px}
+.pill-row{display:flex;flex-wrap:wrap;gap:5px}
+.ing-pill{background:#222;border:1px solid #333;border-radius:99px;padding:4px 10px;font-size:11px;color:#ccc}
+.sea-pill{background:#0d2428;border:1px solid #1a4048;border-radius:99px;padding:4px 10px;font-size:11px;color:#5DCAA5}
+
+/* ── Steps ── */
+.steps-section{margin-bottom:14px}
+.steps-label{font-size:10px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px}
+.step{font-size:12px;color:#ccc;margin-bottom:6px;padding-left:20px;position:relative;line-height:1.55}
+.step-num{position:absolute;left:0;color:#1D9E75;font-weight:600;font-size:11px}
+
+/* ── Log + Amazon ── */
+.card-actions{display:flex;flex-direction:column;gap:8px}
+.log-btn{width:100%;padding:10px;border-radius:10px;background:#0d2a1f;border:1px solid #1D9E75;color:#1D9E75;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s}
+.log-btn:hover{background:#1D9E75;color:#fff}
+.log-btn.logged{background:#1D9E75;color:#fff;opacity:0.7;cursor:default}
+.amazon-btn{display:block;width:100%;padding:10px;border-radius:10px;background:#1a1500;border:1px solid #3a2e00;color:#EF9F27;font-size:12px;font-weight:500;text-align:center;text-decoration:none;transition:all 0.15s}
+.amazon-btn:hover{background:#2a2200;border-color:#EF9F27}
+
+/* ── Pagination ── */
+.pagination{display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 16px 20px}
+.page-btn{padding:8px 16px;border-radius:99px;border:1px solid #333;background:transparent;color:#888;font-size:12px;cursor:pointer;transition:all 0.15s}
+.page-btn:hover:not(:disabled){border-color:#1D9E75;color:#1D9E75}
+.page-btn:disabled{opacity:0.3;cursor:not-allowed}
+.page-counter{font-size:12px;color:#555}
+
+/* ── Settings Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:flex-end;justify-content:center;z-index:100;padding:0 8px 8px}
+.modal-overlay.open{display:flex}
+.modal{background:#1a1a1a;border-radius:24px 24px 20px 20px;padding:24px 20px;width:100%;max-width:390px}
+.modal-handle{width:36px;height:4px;background:#333;border-radius:2px;margin:0 auto 20px}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:18px}
+.field-group{margin-bottom:14px}
+.field-group label{font-size:11px;color:#666;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px}
+.field-group input{width:100%;font-size:14px;padding:10px 12px;border-radius:10px;border:1px solid #333;background:#222;color:#fff;outline:none}
+.field-group input:focus{border-color:#1D9E75}
+.save-btn{width:100%;padding:13px;border-radius:12px;background:#1D9E75;border:none;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px}
+
+/* ── Paywall Modal ── */
+.paywall{background:#1a1a1a;border-radius:24px 24px 20px 20px;padding:24px 20px;width:100%;max-width:390px}
+.paywall-icon{font-size:36px;text-align:center;margin-bottom:12px}
+.paywall h2{font-size:18px;font-weight:700;text-align:center;margin-bottom:6px}
+.paywall .usage{font-size:13px;color:#888;text-align:center;margin-bottom:18px}
+.paywall-benefits{background:#111;border-radius:12px;padding:14px;margin-bottom:18px}
+.benefit{display:flex;align-items:center;gap:10px;font-size:13px;color:#ccc;margin-bottom:8px}
+.benefit:last-child{margin-bottom:0}
+.benefit-check{color:#1D9E75;font-weight:700}
+.price{font-size:24px;font-weight:700;text-align:center;margin-bottom:4px}
+.price span{font-size:14px;color:#888;font-weight:400}
+.price-sub{font-size:12px;color:#555;text-align:center;margin-bottom:18px}
+.upgrade-btn{width:100%;padding:14px;border-radius:12px;background:#1D9E75;border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.maybe-btn{width:100%;padding:10px;border-radius:12px;background:transparent;border:1px solid #333;color:#888;font-size:13px;cursor:pointer}
 </style>
 </head>
 <body>
 <div class="phone">
 
+  <!-- ══ HOME ══ -->
   <div id="view-home">
+
+    <!-- Daily Tracker -->
+    <div class="tracker" id="tracker-bar">
+      <div class="tracker-title">Today's nutrition</div>
+      <div class="tracker-grid">
+        <div class="tracker-metric">
+          <div class="label">Calories</div>
+          <div class="value" id="t-cal">0 / <span id="g-cal">2000</span></div>
+          <div class="bar-bg"><div class="bar-fill cal-fill" id="b-cal" style="width:0%"></div></div>
+        </div>
+        <div class="tracker-metric">
+          <div class="label">Protein</div>
+          <div class="value" id="t-pro">0 / <span id="g-pro">150</span>g</div>
+          <div class="bar-bg"><div class="bar-fill pro-fill" id="b-pro" style="width:0%"></div></div>
+        </div>
+        <div class="tracker-metric">
+          <div class="label">Carbs</div>
+          <div class="value" id="t-carb">0 / <span id="g-carb">200</span>g</div>
+          <div class="bar-bg"><div class="bar-fill carb-fill" id="b-carb" style="width:0%"></div></div>
+        </div>
+        <div class="tracker-metric">
+          <div class="label">Fat</div>
+          <div class="value" id="t-fat">0 / <span id="g-fat">65</span>g</div>
+          <div class="bar-bg"><div class="bar-fill fat-fill" id="b-fat" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hero -->
     <div class="hero">
       <div class="hero-icon">🍳</div>
-      <h1>What's in your fridge?</h1>
-      <p>Add ingredients, get 3 recipes instantly</p>
+      <h1>FridgeChef</h1>
+      <p>Scan your fridge, get personalized recipes</p>
     </div>
+
     <div class="content">
-      <div class="label">Your ingredients</div>
+
+      <!-- Fitness Goal -->
+      <div class="section-label">Fitness Goal</div>
+      <div class="goal-row" id="goal-row">
+        <button class="goal-btn on" data-v="none">All 🍽️</button>
+        <button class="goal-btn" data-v="lose-weight">Lose Weight 🔥</button>
+        <button class="goal-btn" data-v="build-muscle">Build Muscle 💪</button>
+        <button class="goal-btn" data-v="maintain">Maintain ⚖️</button>
+        <button class="goal-btn" data-v="keto">Keto 🥑</button>
+      </div>
+
+      <!-- Fridge Scanner -->
+      <div class="section-label">Fridge Scanner</div>
+      <div class="scanner-area" id="scanner-area">
+        <input type="file" id="scanner-input" accept="image/*" capture="environment"/>
+        <img id="scanner-preview" class="scanner-preview" alt="Fridge preview"/>
+        <div id="scanner-placeholder">
+          <div class="scanner-icon">📷</div>
+          <div class="scanner-text">Tap to scan your fridge</div>
+          <div class="scanner-sub">Camera or photo library</div>
+        </div>
+        <div class="scanner-overlay" id="scanner-overlay">
+          <div class="scanner-spinner"></div>
+          <p>Scanning ingredients…</p>
+        </div>
+      </div>
+      <div class="scan-banner" id="scan-banner">
+        <strong id="scan-count"></strong> detected: <span id="scan-list"></span>
+        <span id="scan-retake">Retake</span>
+      </div>
+
+      <!-- Ingredient Tags -->
+      <div class="section-label" style="margin-top:14px">Ingredients</div>
       <div class="tag-row" id="tag-row">
         <div class="tag active" data-v="chicken">🍗 Chicken</div>
         <div class="tag active" data-v="rice">🌾 Rice</div>
@@ -76,140 +277,507 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <div class="tag" data-v="cheese">🧀 Cheese</div>
       </div>
       <div class="input-row">
-        <input type="text" id="ingredient-input" placeholder="Add your ingredient..."/>
+        <input type="text" id="ingredient-input" placeholder="Add ingredient…"/>
         <button class="add-btn" id="add-btn" aria-label="Add">+</button>
       </div>
-      <div class="label">Dietary preference</div>
+
+      <!-- Dietary Preference -->
+      <div class="section-label">Dietary Preference</div>
       <div class="diet-row" id="diet-row">
         <button class="diet-btn on" data-v="none">Any</button>
-        <button class="diet-btn" data-v="low-calorie">Low calorie</button>
+        <button class="diet-btn" data-v="low-calorie">Low Calorie</button>
         <button class="diet-btn" data-v="vegetarian">Vegetarian</button>
-        <button class="diet-btn" data-v="high-protein">High protein</button>
+        <button class="diet-btn" data-v="high-protein">High Protein</button>
       </div>
-      <button class="go-btn" id="go-btn">🍽️ &nbsp;Find recipes</button>
+
+      <!-- Count selectors -->
+      <div class="section-label">Generate</div>
+      <div class="count-row">
+        <select id="recipe-count">
+          <option value="5">5 Recipes</option>
+          <option value="10" selected>10 Recipes</option>
+        </select>
+        <select id="per-page">
+          <option value="5" selected>5 per page</option>
+          <option value="10">10 per page</option>
+        </select>
+      </div>
+
+      <button class="go-btn" id="go-btn">🍽️ &nbsp;Find Recipes</button>
       <div id="error-area"></div>
     </div>
   </div>
 
+  <!-- ══ LOADING ══ -->
   <div id="view-loading" style="display:none">
-    <div class="hero" style="padding:20px">
+    <div class="hero" style="padding:24px 20px">
       <div class="hero-icon">👨‍🍳</div>
-      <h1 style="font-size:18px">Finding recipes...</h1>
+      <h1 style="font-size:18px">AI chef is thinking…</h1>
+      <p style="margin-top:4px">Generating detailed nutrition &amp; seasoning</p>
     </div>
     <div class="loading">
-      <div class="spinner"></div>
-      <p>AI chef is thinking...</p>
+      <div class="spin-ring"></div>
+      <p>This usually takes 5–10 seconds</p>
     </div>
   </div>
 
+  <!-- ══ RESULTS ══ -->
   <div id="view-results" style="display:none">
-    <div class="hero" style="padding:20px 20px 16px">
-      <div class="hero-icon">✅</div>
-      <h1 style="font-size:18px">3 recipes for tonight</h1>
-      <p id="result-sub"></p>
+    <div class="results-bar">
+      <h2 id="results-title">Recipes found</h2>
+      <p id="results-sub"></p>
     </div>
-    <div style="padding:16px 20px 0">
+    <div class="results-nav">
       <button class="back-btn" id="back-btn">← Try different ingredients</button>
+      <span class="page-info" id="page-range"></span>
     </div>
-    <div id="recipes-container" class="pb"></div>
+    <div id="recipes-container" class="recipe-list"></div>
+    <div class="pagination">
+      <button class="page-btn" id="prev-btn" disabled>← Prev</button>
+      <span class="page-counter" id="page-counter"></span>
+      <button class="page-btn" id="next-btn">Next →</button>
+    </div>
   </div>
 
 </div>
 
-<script>
-const tagRow = document.getElementById('tag-row');
-const input = document.getElementById('ingredient-input');
-const addBtn = document.getElementById('add-btn');
-const goBtn = document.getElementById('go-btn');
-const backBtn = document.getElementById('back-btn');
-const errorArea = document.getElementById('error-area');
-const dietRow = document.getElementById('diet-row');
+<!-- ══ Settings Modal ══ -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Daily Targets</div>
+    <div class="field-group">
+      <label>Daily Calories (kcal)</label>
+      <input type="number" id="s-cal" value="2000" min="500" max="5000"/>
+    </div>
+    <div class="field-group">
+      <label>Protein (g)</label>
+      <input type="number" id="s-pro" value="150" min="0" max="500"/>
+    </div>
+    <div class="field-group">
+      <label>Carbs (g)</label>
+      <input type="number" id="s-carb" value="200" min="0" max="600"/>
+    </div>
+    <div class="field-group">
+      <label>Fat (g)</label>
+      <input type="number" id="s-fat" value="65" min="0" max="300"/>
+    </div>
+    <button class="save-btn" id="save-goals-btn">Save Targets</button>
+  </div>
+</div>
 
-let diet = 'none';
-dietRow.querySelectorAll('.diet-btn').forEach(b => {
-  b.addEventListener('click', () => {
-    diet = b.dataset.v;
-    dietRow.querySelectorAll('.diet-btn').forEach(x => x.classList.remove('on'));
-    b.classList.add('on');
+<!-- ══ Paywall Modal ══ -->
+<div class="modal-overlay" id="paywall-modal">
+  <div class="paywall">
+    <div class="paywall-icon">🔒</div>
+    <h2>You've hit your daily limit</h2>
+    <div class="usage" id="paywall-usage">You've used 3/3 free recipes today</div>
+    <div class="paywall-benefits">
+      <div class="benefit"><span class="benefit-check">✓</span> Unlimited recipe generation</div>
+      <div class="benefit"><span class="benefit-check">✓</span> Unlimited fridge scanning</div>
+      <div class="benefit"><span class="benefit-check">✓</span> Save favourite recipes</div>
+      <div class="benefit"><span class="benefit-check">✓</span> No daily limits, ever</div>
+    </div>
+    <div class="price">$4.99 <span>/ month</span></div>
+    <div class="price-sub">Cancel anytime</div>
+    <button class="upgrade-btn" id="upgrade-btn">Upgrade to Pro</button>
+    <button class="maybe-btn" id="maybe-btn">Maybe later</button>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+const AMAZON_TAG = 'fridgechef-20';
+
+let diet = 'none', goal = 'none';
+let allRecipes = [], currentPage = 1, perPage = 5;
+
+// ── localStorage helpers ───────────────────────────────
+function loadGoals() {
+  try { return JSON.parse(localStorage.getItem('fc_goals')) || {calories:2000,protein:150,carbs:200,fat:65}; }
+  catch { return {calories:2000,protein:150,carbs:200,fat:65}; }
+}
+function loadLogged() {
+  const today = new Date().toISOString().slice(0,10);
+  try {
+    const d = JSON.parse(localStorage.getItem('fc_logged_today'));
+    if (d && d.date === today) return d.items || [];
+  } catch {}
+  return [];
+}
+function saveLogged(items) {
+  const today = new Date().toISOString().slice(0,10);
+  localStorage.setItem('fc_logged_today', JSON.stringify({date:today, items}));
+}
+function loadUsage() {
+  const today = new Date().toISOString().slice(0,10);
+  try {
+    const d = JSON.parse(localStorage.getItem('fc_daily_usage'));
+    if (d && d.date === today) return d.count || 0;
+  } catch {}
+  return 0;
+}
+function saveUsage(count) {
+  const today = new Date().toISOString().slice(0,10);
+  localStorage.setItem('fc_daily_usage', JSON.stringify({date:today, count}));
+}
+function isPro() { return localStorage.getItem('fc_is_pro') === 'true'; }
+
+// ── Tracker ───────────────────────────────────────────
+function renderTracker() {
+  const goals = loadGoals();
+  const items = loadLogged();
+  const totals = items.reduce((a,n) => ({
+    calories: a.calories + (n.calories||0),
+    protein:  a.protein  + (n.protein||0),
+    carbs:    a.carbs    + (n.carbs||0),
+    fat:      a.fat      + (n.fat||0)
+  }), {calories:0,protein:0,carbs:0,fat:0});
+
+  document.getElementById('g-cal').textContent  = goals.calories;
+  document.getElementById('g-pro').textContent  = goals.protein;
+  document.getElementById('g-carb').textContent = goals.carbs;
+  document.getElementById('g-fat').textContent  = goals.fat;
+
+  document.getElementById('t-cal').innerHTML  = `${totals.calories} / <span id="g-cal">${goals.calories}</span>`;
+  document.getElementById('t-pro').innerHTML  = `${totals.protein} / <span id="g-pro">${goals.protein}</span>g`;
+  document.getElementById('t-carb').innerHTML = `${totals.carbs} / <span id="g-carb">${goals.carbs}</span>g`;
+  document.getElementById('t-fat').innerHTML  = `${totals.fat} / <span id="g-fat">${goals.fat}</span>g`;
+
+  const pct = (v, g) => Math.min(100, Math.round(v / g * 100)) + '%';
+  document.getElementById('b-cal').style.width  = pct(totals.calories, goals.calories);
+  document.getElementById('b-pro').style.width  = pct(totals.protein,  goals.protein);
+  document.getElementById('b-carb').style.width = pct(totals.carbs,    goals.carbs);
+  document.getElementById('b-fat').style.width  = pct(totals.fat,      goals.fat);
+}
+
+// ── Settings modal ────────────────────────────────────
+document.getElementById('tracker-bar').addEventListener('click', () => {
+  const g = loadGoals();
+  document.getElementById('s-cal').value  = g.calories;
+  document.getElementById('s-pro').value  = g.protein;
+  document.getElementById('s-carb').value = g.carbs;
+  document.getElementById('s-fat').value  = g.fat;
+  document.getElementById('settings-modal').classList.add('open');
+});
+document.getElementById('settings-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('settings-modal'))
+    document.getElementById('settings-modal').classList.remove('open');
+});
+document.getElementById('save-goals-btn').addEventListener('click', () => {
+  const g = {
+    calories: parseInt(document.getElementById('s-cal').value)  || 2000,
+    protein:  parseInt(document.getElementById('s-pro').value)  || 150,
+    carbs:    parseInt(document.getElementById('s-carb').value) || 200,
+    fat:      parseInt(document.getElementById('s-fat').value)  || 65
+  };
+  localStorage.setItem('fc_goals', JSON.stringify(g));
+  document.getElementById('settings-modal').classList.remove('open');
+  renderTracker();
+});
+
+// ── Goal selector ─────────────────────────────────────
+document.getElementById('goal-row').addEventListener('click', e => {
+  const btn = e.target.closest('.goal-btn');
+  if (!btn) return;
+  goal = btn.dataset.v;
+  document.querySelectorAll('.goal-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+});
+
+// ── Diet selector ─────────────────────────────────────
+document.getElementById('diet-row').addEventListener('click', e => {
+  const btn = e.target.closest('.diet-btn');
+  if (!btn) return;
+  diet = btn.dataset.v;
+  document.querySelectorAll('.diet-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+});
+
+// ── Fridge scanner ────────────────────────────────────
+const scannerArea = document.getElementById('scanner-area');
+const scannerInput = document.getElementById('scanner-input');
+const scannerPreview = document.getElementById('scanner-preview');
+const scannerPlaceholder = document.getElementById('scanner-placeholder');
+const scannerOverlay = document.getElementById('scanner-overlay');
+const scanBanner = document.getElementById('scan-banner');
+
+scannerArea.addEventListener('click', e => {
+  if (e.target.closest('#scan-retake')) return;
+  scannerInput.click();
+});
+
+scannerInput.addEventListener('change', async () => {
+  const file = scannerInput.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const dataUrl = ev.target.result;
+    scannerPreview.src = dataUrl;
+    scannerPreview.style.display = 'block';
+    scannerPlaceholder.style.display = 'none';
+    scannerOverlay.classList.add('active');
+    scanBanner.style.display = 'none';
+
+    try {
+      const resp = await fetch('/api/scan', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({image: dataUrl})
+      });
+      const data = await resp.json();
+      if (data.ingredients && data.ingredients.length > 0) {
+        data.ingredients.forEach(ing => addTag(ing, true));
+        document.getElementById('scan-count').textContent = `${data.ingredients.length} ingredients`;
+        document.getElementById('scan-list').textContent = data.ingredients.slice(0,5).join(', ') + (data.ingredients.length > 5 ? '…' : '');
+        scanBanner.style.display = 'block';
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      scannerOverlay.classList.remove('active');
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('scan-retake').addEventListener('click', e => {
+  e.stopPropagation();
+  scannerPreview.style.display = 'none';
+  scannerPlaceholder.style.display = 'block';
+  scanBanner.style.display = 'none';
+  scannerInput.value = '';
+  document.querySelectorAll('.tag.scanned').forEach(t => {
+    t.classList.remove('scanned','active');
+    if (!['chicken','rice','eggs','tomato','onion','garlic','pasta','cheese'].includes(t.dataset.v)) {
+      t.remove();
+    }
   });
 });
+
+// ── Tags ──────────────────────────────────────────────
+const tagRow = document.getElementById('tag-row');
 
 tagRow.addEventListener('click', e => {
   const tag = e.target.closest('.tag');
   if (tag) tag.classList.toggle('active');
 });
 
-function addTag(val) {
-  const v = val.trim();
+function addTag(val, fromScan = false) {
+  const v = val.trim().toLowerCase();
   if (!v) return;
-  const existing = [...tagRow.querySelectorAll('.tag')].find(t => t.dataset.v.toLowerCase() === v.toLowerCase());
-  if (existing) { existing.classList.add('active'); return; }
+  const existing = [...tagRow.querySelectorAll('.tag')].find(t => t.dataset.v.toLowerCase() === v);
+  if (existing) {
+    existing.classList.add('active');
+    if (fromScan) existing.classList.add('scanned');
+    return;
+  }
   const tag = document.createElement('div');
-  tag.className = 'tag active';
+  tag.className = 'tag active' + (fromScan ? ' scanned' : '');
   tag.dataset.v = v;
   tag.textContent = v.charAt(0).toUpperCase() + v.slice(1);
-  tag.addEventListener('click', () => tag.classList.toggle('active'));
   tagRow.appendChild(tag);
 }
 
-addBtn.addEventListener('click', () => { addTag(input.value); input.value = ''; });
-input.addEventListener('keydown', e => { if (e.key === 'Enter') { addTag(input.value); input.value = ''; } });
+const ingredientInput = document.getElementById('ingredient-input');
+document.getElementById('add-btn').addEventListener('click', () => {
+  addTag(ingredientInput.value); ingredientInput.value = '';
+});
+ingredientInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { addTag(ingredientInput.value); ingredientInput.value = ''; }
+});
 
+// ── View switching ────────────────────────────────────
 function show(id) {
   ['view-home','view-loading','view-results'].forEach(v => {
-    document.getElementById(v).style.display = v === id ? 'block' : 'none';
+    document.getElementById(v).style.display = (v === id) ? 'block' : 'none';
   });
 }
 
-backBtn.addEventListener('click', () => show('view-home'));
+document.getElementById('back-btn').addEventListener('click', () => show('view-home'));
 
-goBtn.addEventListener('click', async () => {
-  errorArea.innerHTML = '';
+// ── Paywall ───────────────────────────────────────────
+function showPaywall() {
+  const count = loadUsage();
+  document.getElementById('paywall-usage').textContent = `You've used ${count}/3 free recipes today`;
+  document.getElementById('paywall-modal').classList.add('open');
+}
+document.getElementById('maybe-btn').addEventListener('click', () => {
+  document.getElementById('paywall-modal').classList.remove('open');
+});
+document.getElementById('upgrade-btn').addEventListener('click', () => {
+  window.location.href = '/api/create-checkout';
+});
+document.getElementById('paywall-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('paywall-modal'))
+    document.getElementById('paywall-modal').classList.remove('open');
+});
+
+// ── Find Recipes ──────────────────────────────────────
+document.getElementById('go-btn').addEventListener('click', async () => {
+  document.getElementById('error-area').innerHTML = '';
+
+  if (!isPro()) {
+    const count = loadUsage();
+    if (count >= 3) { showPaywall(); return; }
+    saveUsage(count + 1);
+  }
+
   const items = [...tagRow.querySelectorAll('.tag.active')].map(t => t.dataset.v);
   if (items.length === 0) {
-    errorArea.innerHTML = '<div class="error-box">Please select at least one ingredient.</div>';
+    document.getElementById('error-area').innerHTML = '<div class="error-box">Please select at least one ingredient.</div>';
     return;
   }
+
+  const recipeCount = parseInt(document.getElementById('recipe-count').value);
+  perPage = parseInt(document.getElementById('per-page').value);
+  currentPage = 1;
+
   show('view-loading');
-  document.getElementById('result-sub').textContent = items.join(', ');
 
   try {
     const res = await fetch('/api/recipes', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ingredients: items, diet })
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ingredients: items, diet, goal, count: recipeCount})
     });
     const data = await res.json();
-    if (!data.recipes) throw new Error('No recipes');
-    renderRecipes(data.recipes);
+    if (!data.recipes || data.recipes.length === 0) throw new Error('No recipes');
+    allRecipes = data.recipes;
+
+    document.getElementById('results-title').textContent = `✅ ${allRecipes.length} recipes found`;
+    document.getElementById('results-sub').textContent = 'Using: ' + items.slice(0,4).join(', ') + (items.length > 4 ? '…' : '');
+    renderPage();
     show('view-results');
   } catch (err) {
     show('view-home');
-    errorArea.innerHTML = '<div class="error-box">Something went wrong. Please try again.</div>';
+    document.getElementById('error-area').innerHTML = '<div class="error-box">Something went wrong. Please try again.</div>';
   }
 });
 
-function renderRecipes(recipes) {
+// ── Pagination ────────────────────────────────────────
+document.getElementById('prev-btn').addEventListener('click', () => { currentPage--; renderPage(); });
+document.getElementById('next-btn').addEventListener('click', () => { currentPage++; renderPage(); });
+
+function renderPage() {
+  const total = allRecipes.length;
+  const totalPages = Math.ceil(total / perPage);
+  const start = (currentPage - 1) * perPage;
+  const end = Math.min(start + perPage, total);
+  const pageRecipes = allRecipes.slice(start, end);
+
+  document.getElementById('page-range').textContent = `Showing ${start+1}–${end} of ${total}`;
+  document.getElementById('page-counter').textContent = `${currentPage} / ${totalPages}`;
+  document.getElementById('prev-btn').disabled = currentPage <= 1;
+  document.getElementById('next-btn').disabled = currentPage >= totalPages;
+
   const container = document.getElementById('recipes-container');
   container.innerHTML = '';
-  recipes.forEach((r, i) => {
-    const card = document.createElement('div');
-    card.className = 'recipe-card';
-    card.innerHTML = `
-      <div class="recipe-head">
-        <div class="recipe-num">${i + 1}</div>
-        <div>
-          <div class="recipe-name">${r.name}</div>
-          <div class="recipe-meta">⏱ ${r.time} &nbsp;·&nbsp; ${r.difficulty}</div>
-        </div>
-      </div>
-      <div class="recipe-body">
-        <div class="recipe-desc">${r.description}</div>
-        ${r.steps.map(s => `<div class="step">${s}</div>`).join('')}
-      </div>`;
-    container.appendChild(card);
+  pageRecipes.forEach((r, i) => {
+    container.appendChild(buildCard(r, start + i + 1));
   });
 }
+
+// ── Recipe card ───────────────────────────────────────
+function buildCard(r, num) {
+  const card = document.createElement('div');
+  card.className = 'recipe-card';
+
+  const n = r.nutrition || {};
+  const kcal = n.calories || '—';
+
+  // Amazon search URL from first ingredient
+  const firstIng = (r.ingredients && r.ingredients[0]) ? encodeURIComponent(r.ingredients[0].replace(/[\d]+g?\s*/,'').trim()) : 'ingredients';
+  const amazonUrl = `https://www.amazon.com/s?k=${firstIng}&tag=${AMAZON_TAG}`;
+
+  card.innerHTML = `
+    <div class="recipe-head">
+      <div class="recipe-num">${num}</div>
+      <div class="recipe-title">
+        <div class="recipe-name">${esc(r.name)}</div>
+        <div class="recipe-meta">⏱ ${esc(r.time || '—')} &nbsp;·&nbsp; ${esc(r.difficulty || '—')} &nbsp;·&nbsp; ${r.servings || 1} serving${r.servings > 1 ? 's':''}</div>
+      </div>
+      <div class="calorie-badge">${kcal} kcal</div>
+      <div class="chevron">▾</div>
+    </div>
+    <div class="recipe-body">
+      <div class="recipe-desc">${esc(r.description || '')}</div>
+
+      ${r.fitness_tip ? `<div class="fitness-tip">
+        <div class="fitness-tip-label">Fitness Tip</div>
+        <p>${esc(r.fitness_tip)}</p>
+      </div>` : ''}
+
+      <div class="nutrition-panel">
+        <div class="nutrition-title">Nutrition Facts</div>
+        <div class="nutrition-calories">
+          <span class="label">Calories</span>
+          <span class="value">${n.calories || 0}</span>
+        </div>
+        ${nutritionRow('Protein',  n.protein  || 0, 'g', '#378ADD', 200)}
+        ${nutritionRow('Carbs',    n.carbs    || 0, 'g', '#EF9F27', 300)}
+        ${nutritionRow('Fat',      n.fat      || 0, 'g', '#D4537E', 100)}
+        ${nutritionRow('Fiber',    n.fiber    || 0, 'g', '#555555', 38)}
+        ${nutritionRow('Sugar',    n.sugar    || 0, 'g', '#555555', 50)}
+      </div>
+
+      ${r.ingredients && r.ingredients.length ? `<div class="pill-section">
+        <div class="pill-section-label">Ingredients</div>
+        <div class="pill-row">${r.ingredients.map(i => `<span class="ing-pill">${esc(i)}</span>`).join('')}</div>
+      </div>` : ''}
+
+      ${r.seasoning && r.seasoning.length ? `<div class="pill-section">
+        <div class="pill-section-label">Seasoning</div>
+        <div class="pill-row">${r.seasoning.map(s => `<span class="sea-pill">🧂 ${esc(s)}</span>`).join('')}</div>
+      </div>` : ''}
+
+      ${r.steps && r.steps.length ? `<div class="steps-section">
+        <div class="steps-label">Instructions</div>
+        ${r.steps.map((s, i) => `<div class="step"><span class="step-num">${i+1}.</span>${esc(s)}</div>`).join('')}
+      </div>` : ''}
+
+      <div class="card-actions">
+        <button class="log-btn" data-nutrition='${JSON.stringify(n)}'>+ Log this meal</button>
+        <a class="amazon-btn" href="${amazonUrl}" target="_blank" rel="noopener">🛒 Buy ingredients on Amazon</a>
+      </div>
+    </div>`;
+
+  // Expand / collapse
+  card.querySelector('.recipe-head').addEventListener('click', () => {
+    card.classList.toggle('open');
+  });
+
+  // Log meal
+  card.querySelector('.log-btn').addEventListener('click', function() {
+    if (this.classList.contains('logged')) return;
+    const nutrition = JSON.parse(this.dataset.nutrition);
+    const items = loadLogged();
+    items.push(nutrition);
+    saveLogged(items);
+    this.textContent = '✓ Logged';
+    this.classList.add('logged');
+    renderTracker();
+  });
+
+  return card;
+}
+
+function nutritionRow(label, value, unit, color, max) {
+  const pct = Math.min(100, Math.round(value / max * 100));
+  return `<div class="nutrition-row">
+    <span class="n-label">${label}</span>
+    <div class="n-bar-bg"><div class="n-bar" style="width:${pct}%;background:${color}"></div></div>
+    <span class="n-val">${value}${unit}</span>
+  </div>`;
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Init ──────────────────────────────────────────────
+renderTracker();
 </script>
 </body>
 </html>
